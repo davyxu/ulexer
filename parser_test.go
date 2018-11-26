@@ -31,14 +31,20 @@ func TestExpect(t *testing.T) {
 	})
 }
 
-// 回车符的识别
-func TestLine(t *testing.T) {
-	lex := NewLexer([]rune("\n"))
+// 回车处理
+func TestLineEnd(t *testing.T) {
+	// Mac OS 9 以及之前的系统的换行符是 CR，从 Mac OS X （后来改名为“OS X”）开始的换行符是 LF即‘\n'，和Unix/Linux统一了。
+	lex := NewLexer([]rune("\n \r \r\n"))
 
 	lex.Run(func(lex *Lexer) {
-		SkipString(lex, " \t")
-		ExpectString(lex, "\n")
-		ExpectLogResult("", t)
+		for !lex.EOF() {
+			SkipString(lex, []rune{' ', '\t'})
+			SkipLineEnd(lex)
+		}
+
+		if lex.Line() != 3 {
+			t.FailNow()
+		}
 	})
 }
 
