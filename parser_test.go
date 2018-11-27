@@ -52,6 +52,7 @@ func TestSvcID(t *testing.T) {
 			t.FailNow()
 		}
 
+		// 跳过#
 		lex.Consume(1)
 
 		svcIndex := ExpectInt32(lex)
@@ -60,6 +61,7 @@ func TestSvcID(t *testing.T) {
 			t.FailNow()
 		}
 
+		// 跳过@
 		lex.Consume(1)
 
 		group := ReadStringUtil(lex, 0)
