@@ -8,6 +8,8 @@ import (
 type Lexer struct {
 	src   []rune
 	index int
+	line  int
+	col   int
 }
 
 func (self *Lexer) Current() rune {
@@ -27,6 +29,14 @@ func (self *Lexer) Count() int {
 	return len(self.src)
 }
 
+func (self *Lexer) Line() int {
+	return self.line
+}
+
+func (self *Lexer) Col() int {
+	return self.col
+}
+
 func (self *Lexer) Peek(offset int) rune {
 
 	if self.index+offset >= len(self.src) {
@@ -38,6 +48,15 @@ func (self *Lexer) Peek(offset int) rune {
 
 func (self *Lexer) Consume(n int) {
 	self.index += n
+	self.col += n
+}
+
+func (self *Lexer) onNewLine() {
+	self.line++
+}
+
+func (self *Lexer) onReturn() {
+	self.col = 1
 }
 
 func (self *Lexer) EOF() bool {
@@ -110,6 +129,8 @@ func (self *Lexer) Run(callback func(lex *Lexer)) {
 func NewLexer(s []rune) *Lexer {
 
 	return &Lexer{
-		src: s,
+		src:  s,
+		line: 1,
+		col:  1,
 	}
 }

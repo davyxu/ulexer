@@ -4,14 +4,14 @@ import "strconv"
 
 func ExpectString(lex *Lexer, str string) {
 
-	if _, ok := lex.Visit(MatchString(str)); !ok {
+	if _, ok := lex.Visit(MatchCompleteString(str)); !ok {
 		lex.Error("Expect '%s'", str)
 	}
 }
 
 func ExpectInt32(lex *Lexer) int32 {
 
-	raw, ok := lex.Visit(ReadNumber)
+	raw, ok := lex.Visit(MatchNumber)
 
 	if ok {
 
