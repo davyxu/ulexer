@@ -1,23 +1,17 @@
 package golexer2
 
 import (
-	"github.com/davyxu/golog"
-	"io"
+	"fmt"
+	"os"
 	"strings"
 	"testing"
 )
 
-var (
-	log        = golog.New("golexer2")
-	logCatcher = new(outputCacher)
-	preOutput  io.Writer
-)
+func ExpectLogResult(lex *Lexer, expect string, t *testing.T) {
 
-func ExpectLogResult(expect string, t *testing.T) {
-
-	got := logCatcher.String()
+	got := strings.TrimSpace(lex.logger.GetOutput().(fmt.Stringer).String())
 	if got != expect {
-		t.Logf("Expect log output '%s' go '%s'", expect, got)
+		t.Logf("Expect log output '%s' got '%s'", expect, got)
 		t.FailNow()
 	}
 
@@ -35,11 +29,5 @@ func (self *outputCacher) Write(p []byte) (n int, err error) {
 
 	self.sb.Write(p)
 
-	return preOutput.Write(p)
-}
-
-func init() {
-	log.SetParts()
-	preOutput = log.GetOutput()
-	log.SetOutptut(logCatcher)
+	return os.Stdout.Write(p)
 }
