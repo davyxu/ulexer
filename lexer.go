@@ -2,16 +2,14 @@ package golexer2
 
 import (
 	"fmt"
-	"github.com/davyxu/golog"
 	"runtime"
 )
 
 type Lexer struct {
-	src    []rune
-	pos    int
-	line   int
-	col    int
-	logger *golog.Logger
+	src  []rune
+	pos  int
+	line int
+	col  int
 }
 
 func (self *Lexer) Pos() int {
@@ -71,7 +69,7 @@ func (self *Lexer) ToLiteral(count int) string {
 }
 
 func (self *Lexer) Error(format string, args ...interface{}) {
-	panic(fmt.Sprintf(format, args...))
+	panic(fmt.Errorf(format, args...))
 }
 
 type Matcher interface {
@@ -139,7 +137,7 @@ func (self *Lexer) Expect(m Matcher) *Token {
 	return tk
 }
 
-func (self *Lexer) Run(callback func(lex *Lexer)) {
+func (self *Lexer) Run(callback func(lex *Lexer)) (retErr error) {
 
 	defer func() {
 
@@ -148,33 +146,24 @@ func (self *Lexer) Run(callback func(lex *Lexer)) {
 			panic(err)
 		case nil:
 		default:
-			self.logger.Errorf("%s", err)
+			retErr = err.(error)
+			fmt.Printf("%s\n", err)
+
 		}
 
 	}()
 
 	callback(self)
 
+	return
 }
-
-var (
-	testMode bool
-)
 
 func NewLexer(s []rune) *Lexer {
 
 	self := &Lexer{
-		src:    s,
-		line:   1,
-		col:    1,
-		logger: golog.New("golexer2"),
-	}
-
-	self.logger.SetParts()
-
-	if testMode {
-		golog.ClearAll() // 解决logger会重名
-		self.logger.SetOutptut(new(outputCacher))
+		src:  s,
+		line: 1,
+		col:  1,
 	}
 
 	return self
