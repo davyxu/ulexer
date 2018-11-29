@@ -2,64 +2,54 @@ package golexer2
 
 import "unicode"
 
-type whiteSpaceMatcher struct {
-}
+type whiteSpaceMatcher int
 
-func (whiteSpaceMatcher) MatchRune(index int, r rune) bool {
+func (*whiteSpaceMatcher) MatchRune(index int, r rune) bool {
 	return unicode.In(r, unicode.White_Space)
 }
 
-func (whiteSpaceMatcher) TokenType() string {
+func (*whiteSpaceMatcher) TokenType() string {
 	return "WhiteSpace"
 }
 
-var _whiteSpaceMatcher = new(whiteSpaceMatcher)
-
 // 匹配空白符
 func WhiteSpace() Matcher {
-	return _whiteSpaceMatcher
+	return (*whiteSpaceMatcher)(nil)
 }
 
-type numberMatcher struct {
-}
+type numberMatcher int
 
-func (numberMatcher) MatchRune(index int, r rune) bool {
+func (*numberMatcher) MatchRune(index int, r rune) bool {
 	return unicode.IsDigit(r)
 }
 
-func (numberMatcher) TokenType() string {
+func (*numberMatcher) TokenType() string {
 	return "Number"
 }
 
-var _numberMatcher = new(numberMatcher)
-
 // 匹配数字
 func Numbers() Matcher {
-	return _numberMatcher
+	return (*numberMatcher)(nil)
 }
 
-type letterMatcher struct {
-}
+type letterMatcher int
 
-func (letterMatcher) MatchRune(index int, r rune) bool {
+func (*letterMatcher) MatchRune(index int, r rune) bool {
 	return unicode.IsLetter(r)
 }
 
-func (letterMatcher) TokenType() string {
+func (*letterMatcher) TokenType() string {
 	return "Letter"
 }
 
-var _letterMatcher = new(letterMatcher)
-
 // 匹配字母
 func Letters() Matcher {
-	return _letterMatcher
+	return (*letterMatcher)(nil)
 }
 
-type etcMatcher struct {
-}
+type etcMatcher int
 
-func (etcMatcher) MatchRune(index int, r rune) bool {
+func (*etcMatcher) MatchRune(index int, r rune) bool {
 
 	if r == 0 {
 		return false
@@ -68,33 +58,28 @@ func (etcMatcher) MatchRune(index int, r rune) bool {
 	return !unicode.IsLetter(r) && !unicode.IsDigit(r)
 }
 
-func (etcMatcher) TokenType() string {
+func (*etcMatcher) TokenType() string {
 	return "Etc"
 }
 
-var _etcMatcher = new(etcMatcher)
-
 // 匹配除字母数字之外的字符
 func Etc() Matcher {
-	return _etcMatcher
+	return (*etcMatcher)(nil)
 }
 
-type lineEndMatcher struct {
-}
+type lineEndMatcher int
 
-func (lineEndMatcher) MatchRune(index int, r rune) bool {
+func (*lineEndMatcher) MatchRune(index int, r rune) bool {
 	return r == '\r' || r == '\n'
 }
 
-func (lineEndMatcher) TokenType() string {
+func (*lineEndMatcher) TokenType() string {
 	return "LineEnd"
 }
 
-var _lineEndMatcher = new(lineEndMatcher)
-
 // 匹配行结尾
 func LineEnd() Matcher {
-	return _lineEndMatcher
+	return (*lineEndMatcher)(nil)
 }
 
 type anyCharMatcher struct {
@@ -115,7 +100,7 @@ func (self *anyCharMatcher) MatchRune(index int, r rune) bool {
 	return false
 }
 
-func (anyCharMatcher) TokenType() string {
+func (*anyCharMatcher) TokenType() string {
 	return "AnyChar"
 }
 
@@ -144,7 +129,7 @@ func (self *containCharMatcher) MatchRune(index int, r rune) bool {
 	return true
 }
 
-func (containCharMatcher) TokenType() string {
+func (*containCharMatcher) TokenType() string {
 	return "ContainChar"
 }
 
@@ -162,10 +147,9 @@ func ContainString(str string) Matcher {
 	}
 }
 
-type identifierMatcher struct {
-}
+type identifierMatcher int
 
-func (identifierMatcher) MatchRune(index int, r rune) bool {
+func (*identifierMatcher) MatchRune(index int, r rune) bool {
 	if index == 0 {
 		if unicode.IsLetter(r) || r == '_' {
 			return true
@@ -181,13 +165,11 @@ func (identifierMatcher) MatchRune(index int, r rune) bool {
 	return false
 }
 
-func (identifierMatcher) TokenType() string {
+func (*identifierMatcher) TokenType() string {
 	return "Identifier"
 }
 
-var _identifierMatcher = new(identifierMatcher)
-
 // 匹配标识符
 func Identifier() Matcher {
-	return _identifierMatcher
+	return (*identifierMatcher)(nil)
 }

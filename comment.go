@@ -1,9 +1,8 @@
 package golexer2
 
-type cLineCommentMatcher struct {
-}
+type cLineCommentMatcher int
 
-func (cLineCommentMatcher) MatchRune(index int, r rune) bool {
+func (*cLineCommentMatcher) MatchRune(index int, r rune) bool {
 	switch index {
 	case 0:
 		return r == '/'
@@ -14,21 +13,18 @@ func (cLineCommentMatcher) MatchRune(index int, r rune) bool {
 	}
 }
 
-func (cLineCommentMatcher) TokenType() string {
+func (*cLineCommentMatcher) TokenType() string {
 	return "CLineComment"
 }
 
-var _cLineCommentMatcher = new(cLineCommentMatcher)
-
 // C的行注释
 func CLineComment() Matcher {
-	return _cLineCommentMatcher
+	return (*numberMatcher)(nil)
 }
 
-type unixLineCommentMatcher struct {
-}
+type unixLineCommentMatcher int
 
-func (unixLineCommentMatcher) MatchRune(index int, r rune) bool {
+func (*unixLineCommentMatcher) MatchRune(index int, r rune) bool {
 	switch index {
 	case 0:
 		return r == '#'
@@ -37,15 +33,13 @@ func (unixLineCommentMatcher) MatchRune(index int, r rune) bool {
 	}
 }
 
-func (unixLineCommentMatcher) TokenType() string {
+func (*unixLineCommentMatcher) TokenType() string {
 	return "UnixLineComment"
 }
 
-var _unixLineCommentMatcher = new(unixLineCommentMatcher)
-
 // Unix的行注释
 func UnixLineComment() Matcher {
-	return _unixLineCommentMatcher
+	return (*unixLineCommentMatcher)(nil)
 }
 
 type cBlockCommentMatcher struct {
@@ -84,7 +78,7 @@ func (self *cBlockCommentMatcher) MatchRune(index int, r rune) bool {
 	}
 }
 
-func (cBlockCommentMatcher) TokenType() string {
+func (*cBlockCommentMatcher) TokenType() string {
 	return "CBlockComment"
 }
 

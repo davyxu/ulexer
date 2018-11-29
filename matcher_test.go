@@ -13,7 +13,15 @@ type TestLexer struct {
 func (self *Lexer) DebugPrint(t *testing.T) {
 	for !self.EOF() {
 
-		tk := self.Try(Numbers(), WhiteSpace(), Identifier(), CBlockComment(), CLineComment(), UnixLineComment(), Etc())
+		tk := self.Try(
+			Numbers(),
+			WhiteSpace(),
+			Identifier(),
+			CBlockComment(),
+			CLineComment(),
+			UnixLineComment(),
+			Etc(),
+		)
 		if tk != nil {
 
 			t.Logf("%02d %10s '%s'", tk.Pos(), tk.Type(), tk.ToString())
@@ -129,7 +137,12 @@ func TestTryList(t *testing.T) {
 
 		for !lex.EOF() {
 
-			tk := lex.Try(Numbers(), WhiteSpace(), Identifier(), Etc())
+			tk := lex.Try(
+				Numbers(),
+				WhiteSpace(),
+				Identifier(),
+				Etc(),
+			)
 			if tk != nil {
 
 				t.Logf("%02d %10s '%s'", tk.Pos(), tk.Type(), tk.ToString())
