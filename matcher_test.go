@@ -1,4 +1,4 @@
-package golexer2
+package ulexer
 
 import (
 	"strings"
@@ -33,7 +33,7 @@ func (self *Lexer) DebugPrint(t *testing.T) {
 	}
 }
 
-func (self *TestLexer) Run(text []rune, callback func(lex *Lexer)) *TestLexer {
+func (self *TestLexer) Run(text string, callback func(lex *Lexer)) *TestLexer {
 
 	self.lex = NewLexer(text)
 
@@ -64,7 +64,7 @@ func (self *TestLexer) ExpectError(t *testing.T, str string) {
 }
 
 func TestExpect(t *testing.T) {
-	new(TestLexer).Run([]rune("1"), func(lex *Lexer) {
+	new(TestLexer).Run("1", func(lex *Lexer) {
 		lex.Expect(Letters())
 	}).ExpectError(t, "Expect Letter")
 }
@@ -73,7 +73,7 @@ func TestExpect(t *testing.T) {
 func TestLineEnd(t *testing.T) {
 
 	// Mac OS 9 以及之前的系统的换行符是 CR，从 Mac OS X （后来改名为“OS X”）开始的换行符是 LF即‘\n'，和Unix/Linux统一了。
-	new(TestLexer).Run([]rune("\n \r \r\n"), func(lex *Lexer) {
+	new(TestLexer).Run("\n \r \r\n", func(lex *Lexer) {
 		for !lex.EOF() {
 			lex.Skip(AnyChar(' ', '\t'))
 			lex.Skip(LineEnd())
@@ -88,7 +88,7 @@ func TestLineEnd(t *testing.T) {
 
 func TestSvcID(t *testing.T) {
 
-	new(TestLexer).Run([]rune("game#1@dev"), func(lex *Lexer) {
+	new(TestLexer).Run("game#1@dev", func(lex *Lexer) {
 		svcName := lex.Expect(Letters()).ToString()
 		if svcName != "game" {
 			t.FailNow()
@@ -116,7 +116,7 @@ func TestSvcID(t *testing.T) {
 
 // 标识符识别
 func TestExpectIdentifier(t *testing.T) {
-	new(TestLexer).Run([]rune("b1 full 1c"), func(lex *Lexer) {
+	new(TestLexer).Run("b1 full 1c", func(lex *Lexer) {
 		if lex.Expect(Identifier()).ToString() != "b1" {
 			t.FailNow()
 		}
@@ -133,7 +133,7 @@ func TestExpectIdentifier(t *testing.T) {
 // parser尝试逻辑
 func TestTryList(t *testing.T) {
 
-	new(TestLexer).Run([]rune("b1 full 1c game#1@dev"), func(lex *Lexer) {
+	new(TestLexer).Run("b1 full 1c game#1@dev", func(lex *Lexer) {
 
 		for !lex.EOF() {
 
@@ -159,8 +159,8 @@ func TestTryList(t *testing.T) {
 // C行注释
 func TestCLineComment(t *testing.T) {
 
-	new(TestLexer).Run([]rune(`// abc
-123`), func(lex *Lexer) {
+	new(TestLexer).Run(`// abc
+123`, func(lex *Lexer) {
 
 		lex.Expect(CLineComment())
 		lex.Expect(LineEnd())
@@ -172,9 +172,9 @@ func TestCLineComment(t *testing.T) {
 // C块注释
 func TestCBlockComment(t *testing.T) {
 
-	new(TestLexer).Run([]rune(`/*a
+	new(TestLexer).Run(`/*a
 1*2/3*/
-456`), func(lex *Lexer) {
+456`, func(lex *Lexer) {
 
 		lex.Expect(CBlockComment())
 		lex.Expect(WhiteSpace())
@@ -186,8 +186,8 @@ func TestCBlockComment(t *testing.T) {
 // Unix行注释
 func TestUnixLineComment(t *testing.T) {
 
-	new(TestLexer).Run([]rune(`# abc
-123`), func(lex *Lexer) {
+	new(TestLexer).Run(`# abc
+123`, func(lex *Lexer) {
 
 		lex.Expect(UnixLineComment())
 		lex.Expect(LineEnd())

@@ -1,4 +1,4 @@
-# golexer2
+# ulexer
 A simple lexer better than parse combinator
 
 

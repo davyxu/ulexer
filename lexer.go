@@ -1,6 +1,7 @@
-package golexer2
+package ulexer
 
 import (
+	"errors"
 	"fmt"
 	"runtime"
 )
@@ -77,12 +78,24 @@ type Matcher interface {
 	TokenType() string
 }
 
-func (self *Lexer) match(m Matcher) (ret *Token) {
+var ErrEOF = errors.New("EOF")
+
+func (self *Lexer) read(m Matcher, consume bool) (ret *Token, eof bool) {
+
+	// 上一个步骤有EOF, 抛出后结束解析
+	if self.Peek(0) == 0 {
+		panic(ErrEOF)
+	}
 
 	var index int
 	for {
 
 		r := self.Peek(index)
+
+		if r == 0 {
+			eof = true
+			break
+		}
 
 		if !m.MatchRune(index, r) {
 			break
@@ -99,21 +112,25 @@ func (self *Lexer) match(m Matcher) (ret *Token) {
 		ret.end = ret.begin + index
 		ret.col = self.Col()
 		ret.line = self.Line()
-		self.Consume(index)
+
+		if consume {
+			self.Consume(index)
+		}
+
 	}
 
 	return
 }
 
 func (self *Lexer) Skip(m Matcher) {
-	self.match(m)
+	self.read(m, true)
 }
 
 func (self *Lexer) Try(mlist ...Matcher) *Token {
 
 	for _, m := range mlist {
 
-		if tk := self.match(m); tk != nil {
+		if tk, _ := self.read(m, true); tk != nil {
 			return tk
 		}
 	}
@@ -123,17 +140,26 @@ func (self *Lexer) Try(mlist ...Matcher) *Token {
 
 func (self *Lexer) Expect(m Matcher) *Token {
 
-	tk := self.match(m)
+	tk, eof := self.read(m, true)
 	if tk == nil {
-		var str string
-		if s, ok := m.(fmt.Stringer); ok {
-			str = s.String()
+
+		if !eof {
+			var str string
+			if s, ok := m.(fmt.Stringer); ok {
+				str = s.String()
+			}
+
+			self.Error("Expect %s %s", m.TokenType(), str)
 		}
 
-		self.Error("Expect %s %s", m.TokenType(), str)
 		return nil
 	}
 
+	return tk
+}
+
+func (self *Lexer) Is(m Matcher) *Token {
+	tk, _ := self.read(m, false)
 	return tk
 }
 
@@ -141,14 +167,17 @@ func (self *Lexer) Run(callback func(lex *Lexer)) (retErr error) {
 
 	defer func() {
 
-		switch err := recover().(type) {
+		switch raw := recover().(type) {
 		case runtime.Error:
-			panic(err)
+			panic(raw)
 		case nil:
-		default:
-			retErr = err.(error)
-			fmt.Printf("%s\n", err)
+		case error:
+			if raw != ErrEOF {
+				retErr = raw
+			}
 
+		default:
+			panic(raw)
 		}
 
 	}()
@@ -158,10 +187,10 @@ func (self *Lexer) Run(callback func(lex *Lexer)) (retErr error) {
 	return
 }
 
-func NewLexer(s []rune) *Lexer {
+func NewLexer(s string) *Lexer {
 
 	self := &Lexer{
-		src:  s,
+		src:  []rune(s),
 		line: 1,
 		col:  1,
 	}

@@ -1,4 +1,4 @@
-package golexer2
+package ulexer
 
 import (
 	"fmt"

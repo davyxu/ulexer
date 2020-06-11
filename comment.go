@@ -1,4 +1,4 @@
-package golexer2
+package ulexer
 
 type cLineCommentMatcher int
 
@@ -19,7 +19,7 @@ func (*cLineCommentMatcher) TokenType() string {
 
 // C的行注释
 func CLineComment() Matcher {
-	return (*numberMatcher)(nil)
+	return (*cLineCommentMatcher)(nil)
 }
 
 type unixLineCommentMatcher int
