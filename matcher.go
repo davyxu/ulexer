@@ -2,152 +2,105 @@ package ulexer
 
 import "unicode"
 
-type whiteSpaceMatcher int
-
-func (*whiteSpaceMatcher) MatchRune(index int, r rune) bool {
-	return unicode.In(r, unicode.White_Space)
+// 匹配空白符, 回车符属于空白符
+func WhiteSpace() Matcher {
+	return (*whiteSpaceMatcher)(nil)
 }
+
+type whiteSpaceMatcher int
 
 func (*whiteSpaceMatcher) TokenType() string {
 	return "WhiteSpace"
 }
 
-// 匹配空白符
-func WhiteSpace() Matcher {
-	return (*whiteSpaceMatcher)(nil)
+func (*whiteSpaceMatcher) MatchRune(index int, r rune) bool {
+	return unicode.In(r, unicode.White_Space)
 }
 
-type numberMatcher int
+func (self *whiteSpaceMatcher) Read(lex *Lexer) (tk *Token) {
 
-func (*numberMatcher) MatchRune(index int, r rune) bool {
+	var count int
+	for {
+		c := lex.Peek(count)
+
+		if !unicode.In(c, unicode.White_Space) {
+			break
+		}
+
+		count++
+	}
+
+	if count == 0 {
+		return EmptyToken
+	}
+
+	tk = lex.NewToken(count, self)
+
+	lex.Consume(count)
+
+	return
+}
+
+// 匹配正数, 负数, 浮点数
+func Numeral() Matcher {
+	return (*numeralMatcher)(nil)
+}
+
+type numeralMatcher int
+
+func (*numeralMatcher) TokenType() string {
+	return "Numeral"
+}
+
+func (*numeralMatcher) MatchRune(index int, r rune) bool {
 	return unicode.IsDigit(r)
 }
+func (self *numeralMatcher) Read(lex *Lexer) (tk *Token) {
 
-func (*numberMatcher) TokenType() string {
-	return "Number"
-}
+	var count int
 
-// 匹配数字
-func Numbers() Matcher {
-	return (*numberMatcher)(nil)
-}
+	var dot bool
 
-type letterMatcher int
+	for {
+		c := lex.Peek(count)
 
-func (*letterMatcher) MatchRune(index int, r rune) bool {
-	return unicode.IsLetter(r)
-}
+		switch {
+		case unicode.IsDigit(c):
 
-func (*letterMatcher) TokenType() string {
-	return "Letter"
-}
+		case c == '-' && count == 0:
 
-// 匹配字母
-func Letters() Matcher {
-	return (*letterMatcher)(nil)
-}
-
-type etcMatcher int
-
-func (*etcMatcher) MatchRune(index int, r rune) bool {
-
-	if r == 0 {
-		return false
-	}
-
-	return !unicode.IsLetter(r) && !unicode.IsDigit(r)
-}
-
-func (*etcMatcher) TokenType() string {
-	return "Etc"
-}
-
-// 匹配除字母数字之外的字符
-func Etc() Matcher {
-	return (*etcMatcher)(nil)
-}
-
-type lineEndMatcher int
-
-func (*lineEndMatcher) MatchRune(index int, r rune) bool {
-	return r == '\r' || r == '\n'
-}
-
-func (*lineEndMatcher) TokenType() string {
-	return "LineEnd"
-}
-
-// 匹配行结尾
-func LineEnd() Matcher {
-	return (*lineEndMatcher)(nil)
-}
-
-type anyCharMatcher struct {
-	list []rune
-}
-
-func (self *anyCharMatcher) String() string {
-	return string(self.list)
-}
-
-func (self *anyCharMatcher) MatchRune(index int, r rune) bool {
-	for _, libr := range self.list {
-		if libr == r {
-			return true
+		case c == '.' && count > 0 && !dot:
+			dot = true
+		default:
+			goto ExitFor
 		}
+
+		count++
 	}
 
-	return false
-}
+ExitFor:
 
-func (*anyCharMatcher) TokenType() string {
-	return "AnyChar"
-}
-
-// 匹配给定的任意字符
-func AnyChar(list ...rune) Matcher {
-	return &anyCharMatcher{
-		list: list,
-	}
-}
-
-type containCharMatcher struct {
-	list []rune
-}
-
-func (self *containCharMatcher) String() string {
-	return string(self.list)
-}
-
-func (self *containCharMatcher) MatchRune(index int, r rune) bool {
-	for _, libr := range self.list {
-		if libr != r {
-			return false
-		}
+	if count == 0 {
+		return EmptyToken
 	}
 
-	return true
+	tk = lex.NewToken(count, self)
+
+	lex.Consume(count)
+
+	return
 }
 
-func (*containCharMatcher) TokenType() string {
-	return "ContainChar"
-}
-
-// 匹配指定的所有字符
-func ContainChar(list ...rune) Matcher {
-	return &containCharMatcher{
-		list: list,
-	}
-}
-
-// 匹配指定的字符串
-func ContainString(str string) Matcher {
-	return &containCharMatcher{
-		list: []rune(str),
-	}
+// 匹配标识符
+func Identifier() Matcher {
+	return (*identifierMatcher)(nil)
 }
 
 type identifierMatcher int
+
+func (*identifierMatcher) TokenType() string {
+	return "Identifier"
+}
 
 func (*identifierMatcher) MatchRune(index int, r rune) bool {
 	if index == 0 {
@@ -165,11 +118,86 @@ func (*identifierMatcher) MatchRune(index int, r rune) bool {
 	return false
 }
 
-func (*identifierMatcher) TokenType() string {
-	return "Identifier"
+func (self *identifierMatcher) Read(lex *Lexer) (tk *Token) {
+
+	var count int
+	for {
+		c := lex.Peek(count)
+
+		isBasic := unicode.IsLetter(c) || c == '_'
+
+		switch {
+		case count == 0 && isBasic:
+		case count > 0 && (isBasic || unicode.IsDigit(c)):
+		default:
+			goto ExitFor
+		}
+
+		count++
+	}
+
+ExitFor:
+
+	if count == 0 {
+		return EmptyToken
+	}
+
+	tk = lex.NewToken(count, self)
+
+	lex.Consume(count)
+
+	return
 }
 
-// 匹配标识符
-func Identifier() Matcher {
-	return (*identifierMatcher)(nil)
+// 包含字面量
+func Contain(literal interface{}) Matcher {
+
+	self := &literalMatcher{}
+
+	switch v := literal.(type) {
+	case string:
+		self.literal = []rune(v)
+	case rune:
+		self.literal = []rune{v}
+	default:
+		panic("invalid contain")
+	}
+
+	return self
+}
+
+type literalMatcher struct {
+	literal []rune
+}
+
+func (*literalMatcher) TokenType() string {
+	return "Literal"
+}
+
+func (self *literalMatcher) Read(lex *Lexer) (tk *Token) {
+
+	var count int
+	for {
+		c := lex.Peek(count)
+
+		if count >= len(self.literal) {
+			break
+		}
+
+		if c != self.literal[count] {
+			break
+		}
+
+		count++
+	}
+
+	if count == 0 {
+		return EmptyToken
+	}
+
+	tk = lex.NewToken(count, self)
+
+	lex.Consume(count)
+
+	return
 }

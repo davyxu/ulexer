@@ -46,7 +46,7 @@ func (self *Lexer) Consume(n int) {
 		case '\n':
 			self.line++
 		case '\r':
-			self.col = 1
+			self.col = 0
 		}
 	}
 
@@ -74,92 +74,40 @@ func (self *Lexer) Error(format string, args ...interface{}) {
 }
 
 type Matcher interface {
-	MatchRune(index int, r rune) bool
+	Read(lex *Lexer) *Token
 	TokenType() string
 }
 
 var ErrEOF = errors.New("EOF")
 
-func (self *Lexer) read(m Matcher, consume bool) (ret *Token, eof bool) {
-
-	// 上一个步骤有EOF, 抛出后结束解析
-	if self.Peek(0) == 0 {
-		panic(ErrEOF)
-	}
-
-	var index int
-	for {
-
-		r := self.Peek(index)
-
-		if r == 0 {
-			eof = true
-			break
-		}
-
-		if !m.MatchRune(index, r) {
-			break
-		}
-
-		index++
-	}
-
-	if index > 0 {
-		ret = new(Token)
-		ret.lit = self.ToLiteral(index)
-		ret.t = m.TokenType()
-		ret.begin = self.Pos()
-		ret.end = ret.begin + index
-		ret.col = self.Col()
-		ret.line = self.Line()
-
-		if consume {
-			self.Consume(index)
-		}
-
-	}
-
+func (self *Lexer) NewToken(count int, m Matcher) (ret *Token) {
+	ret = new(Token)
+	ret.lit = self.ToLiteral(count)
+	ret.t = m.TokenType()
+	ret.begin = self.Pos()
+	ret.end = ret.begin + count
+	ret.col = self.Col()
+	ret.line = self.Line()
 	return
-}
-
-func (self *Lexer) Skip(m Matcher) {
-	self.read(m, true)
-}
-
-func (self *Lexer) Try(mlist ...Matcher) *Token {
-
-	for _, m := range mlist {
-
-		if tk, _ := self.read(m, true); tk != nil {
-			return tk
-		}
-	}
-
-	return nil
 }
 
 func (self *Lexer) Expect(m Matcher) *Token {
 
-	tk, eof := self.read(m, true)
-	if tk == nil {
-
-		if !eof {
-			var str string
-			if s, ok := m.(fmt.Stringer); ok {
-				str = s.String()
-			}
-
-			self.Error("Expect %s %s", m.TokenType(), str)
-		}
-
-		return nil
+	if self.EOF() {
+		panic(ErrEOF)
 	}
 
-	return tk
-}
+	tk := m.Read(self)
 
-func (self *Lexer) Is(m Matcher) *Token {
-	tk, _ := self.read(m, false)
+	if tk == EmptyToken {
+		var str string
+		if s, ok := m.(fmt.Stringer); ok {
+			str = s.String()
+		}
+
+		self.Error("Expect %s %s", m.TokenType(), str)
+	}
+
 	return tk
 }
 
@@ -191,8 +139,8 @@ func NewLexer(s string) *Lexer {
 
 	self := &Lexer{
 		src:  []rune(s),
-		line: 1,
-		col:  1,
+		line: 0,
+		col:  0,
 	}
 
 	return self

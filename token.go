@@ -50,5 +50,5 @@ func (self *Token) ToInt32() int32 {
 }
 
 var (
-	EmptyToken = Token{}
+	EmptyToken = &Token{}
 )
