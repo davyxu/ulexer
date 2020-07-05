@@ -11,17 +11,6 @@ func (*cLineCommentMatcher) TokenType() string {
 
 type cLineCommentMatcher int
 
-func (*cLineCommentMatcher) MatchRune(index int, r rune) bool {
-	switch index {
-	case 0:
-		return r == '/'
-	case 1:
-		return r == '/'
-	default:
-		return r != '\r' && r != '\n'
-	}
-}
-
 func (self *cLineCommentMatcher) Read(lex *Lexer) (tk *Token) {
 
 	if lex.Peek(0) != '/' || lex.Peek(1) != '/' {
@@ -62,15 +51,6 @@ func (*unixLineCommentMatcher) TokenType() string {
 }
 
 type unixLineCommentMatcher int
-
-func (*unixLineCommentMatcher) MatchRune(index int, r rune) bool {
-	switch index {
-	case 0:
-		return r == '#'
-	default:
-		return r != '\r' && r != '\n'
-	}
-}
 
 func (self *unixLineCommentMatcher) Read(lex *Lexer) (tk *Token) {
 

@@ -80,14 +80,26 @@ type Matcher interface {
 
 var ErrEOF = errors.New("EOF")
 
-func (self *Lexer) NewToken(count int, m Matcher) (ret *Token) {
-	ret = new(Token)
-	ret.lit = self.ToLiteral(count)
+func newToken(self *Lexer, count int, m Matcher) *Token {
+	ret := new(Token)
 	ret.t = m.TokenType()
 	ret.begin = self.Pos()
 	ret.end = ret.begin + count
 	ret.col = self.Col()
 	ret.line = self.Line()
+
+	return ret
+}
+
+func (self *Lexer) NewToken(count int, m Matcher) (ret *Token) {
+	ret = newToken(self, count, m)
+	ret.lit = self.ToLiteral(count)
+	return
+}
+
+func (self *Lexer) NewTokenLiteral(count int, m Matcher, literal string) (ret *Token) {
+	ret = newToken(self, count, m)
+	ret.lit = literal
 	return
 }
 

@@ -194,3 +194,26 @@ func TestSvcID(t *testing.T) {
 		}
 	}).MustNoError(t).MustEOF(t)
 }
+
+func TestString(t *testing.T) {
+
+	new(TestLexer).Run(`a "hello" 'world'`, func(lex *Lexer) {
+		if lex.Expect(Identifier()).ToString() != "a" {
+			t.FailNow()
+		}
+
+		lex.Expect(WhiteSpace())
+
+		if lex.Expect(String()).ToString() != "hello" {
+			t.FailNow()
+		}
+
+		lex.Expect(WhiteSpace())
+
+		if lex.Expect(String()).ToString() != "world" {
+			t.FailNow()
+		}
+
+	}).MustNoError(t)
+
+}
