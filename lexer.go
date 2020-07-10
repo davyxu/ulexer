@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
+	"strings"
 )
 
 type Lexer struct {
@@ -46,7 +47,7 @@ func (self *Lexer) Consume(n int) {
 		case '\n':
 			self.line++
 		case '\r':
-			self.col = 0
+			self.col = 1
 		}
 	}
 
@@ -71,11 +72,6 @@ func (self *Lexer) ToLiteral(count int) string {
 
 func (self *Lexer) Error(format string, args ...interface{}) {
 	panic(fmt.Errorf(format, args...))
-}
-
-type Matcher interface {
-	Read(lex *Lexer) *Token
-	TokenType() string
 }
 
 var ErrEOF = errors.New("EOF")
@@ -103,21 +99,74 @@ func (self *Lexer) NewTokenLiteral(count int, m Matcher, literal string) (ret *T
 	return
 }
 
-func (self *Lexer) Expect(m Matcher) *Token {
+func (self *Lexer) Select(mlist ...Matcher) *Token {
 
+	for _, m := range mlist {
+
+		tk := self.Read(m)
+
+		if tk != EmptyToken {
+			return tk
+		}
+	}
+
+	return EmptyToken
+}
+
+type MatchAction func(tk *Token)
+
+func (self *Lexer) SelectAction(mlist []Matcher, alist []MatchAction) {
+
+	if len(mlist) != len(alist) {
+		panic("Matcher list should equal to Action list length")
+	}
+
+	var hit bool
+	for index, m := range mlist {
+		tk := self.Read(m)
+
+		if tk != EmptyToken {
+
+			action := alist[index]
+			if action != nil {
+				action(tk)
+			}
+			hit = true
+			break
+		}
+	}
+
+	if !hit {
+
+		var sb strings.Builder
+
+		for index, m := range mlist {
+			if index > 0 {
+				sb.WriteString(" ")
+			}
+			sb.WriteString(m.TokenType())
+		}
+
+		self.Error("Expect %s", sb.String())
+	}
+
+}
+
+func (self *Lexer) Read(m Matcher) *Token {
 	if self.EOF() {
 		panic(ErrEOF)
 	}
 
-	tk := m.Read(self)
+	return m.Read(self)
+}
+
+func (self *Lexer) Expect(m Matcher) *Token {
+
+	tk := self.Read(m)
 
 	if tk == EmptyToken {
-		var str string
-		if s, ok := m.(fmt.Stringer); ok {
-			str = s.String()
-		}
 
-		self.Error("Expect %s %s", m.TokenType(), str)
+		self.Error("Expect %s, got: %s", m.TokenType(), self.ToLiteral(10))
 	}
 
 	return tk
@@ -151,8 +200,8 @@ func NewLexer(s string) *Lexer {
 
 	self := &Lexer{
 		src:  []rune(s),
-		line: 0,
-		col:  0,
+		line: 1,
+		col:  1,
 	}
 
 	return self

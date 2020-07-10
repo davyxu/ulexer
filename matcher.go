@@ -1,50 +1,28 @@
 package ulexer
 
-import "unicode"
-
-// 匹配正数, 负数, 浮点数
-func Numeral() Matcher {
-	return (*numeralMatcher)(nil)
+type Matcher interface {
+	Read(lex *Lexer) *Token
+	TokenType() string
 }
 
-type numeralMatcher int
-
-func (*numeralMatcher) TokenType() string {
-	return "Numeral"
+// 匹配true/false
+func Bool() Matcher {
+	return (*boolMatcher)(nil)
 }
 
-func (self *numeralMatcher) Read(lex *Lexer) (tk *Token) {
+type boolMatcher int
 
-	var count int
+func (*boolMatcher) TokenType() string {
+	return "Bool"
+}
 
-	var dot bool
+func (self *boolMatcher) Read(lex *Lexer) (tk *Token) {
 
-	for {
-		c := lex.Peek(count)
+	tk = lex.Select(Contain("true"), Contain("false"))
 
-		switch {
-		case unicode.IsDigit(c):
-
-		case c == '-' && count == 0:
-
-		case c == '.' && count > 0 && !dot:
-			dot = true
-		default:
-			goto ExitFor
-		}
-
-		count++
+	if tk != EmptyToken {
+		tk.t = self.TokenType()
 	}
-
-ExitFor:
-
-	if count == 0 {
-		return EmptyToken
-	}
-
-	tk = lex.NewToken(count, self)
-
-	lex.Consume(count)
 
 	return
 }
