@@ -169,6 +169,10 @@ func (self *Lexer) Read(m Matcher) *Token {
 
 		self.preHooker = h
 
+		if self.EOF() {
+			panic(ErrEOF)
+		}
+
 		if tk != nil {
 			return tk
 		}
