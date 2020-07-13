@@ -12,6 +12,8 @@ type Lexer struct {
 	pos  int
 	line int
 	col  int
+
+	preHooker Hooker
 }
 
 func (self *Lexer) Pos() int {
@@ -157,7 +159,28 @@ func (self *Lexer) Read(m Matcher) *Token {
 		panic(ErrEOF)
 	}
 
+	if self.preHooker != nil {
+
+		// hooker里不能用hooker
+		h := self.preHooker
+		self.preHooker = nil
+
+		tk := h(self)
+
+		self.preHooker = h
+
+		if tk != nil {
+			return tk
+		}
+	}
+
 	return m.Read(self)
+}
+
+type Hooker func(lex *Lexer) *Token
+
+func (self *Lexer) SetPreHook(hook Hooker) {
+	self.preHooker = hook
 }
 
 func (self *Lexer) Expect(m Matcher) *Token {
@@ -166,7 +189,7 @@ func (self *Lexer) Expect(m Matcher) *Token {
 
 	if tk == EmptyToken {
 
-		self.Error("Expect %s, got: %s", m.TokenType(), self.ToLiteral(10))
+		self.Error("Expect %s, got: %s(offset %d)", m.TokenType(), self.ToLiteral(100), self.Pos())
 	}
 
 	return tk
