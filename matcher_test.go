@@ -16,11 +16,11 @@ type TestLexer struct {
 	lex    *Lexer
 }
 
-func (self *TestLexer) Run(text string, callback func(lex *Lexer)) *TestLexer {
+func (self *TestLexer) Try(text string, callback func(lex *Lexer)) *TestLexer {
 
 	self.lex = NewLexer(text)
 
-	self.runErr = self.lex.Run(callback)
+	self.runErr = Try(self.lex, callback)
 
 	return self
 }
@@ -31,14 +31,14 @@ func (self *TestLexer) RunUnit(ulist []*TestUnitInput, t *testing.T) *TestLexer 
 
 		self.lex = NewLexer(u.Input)
 
-		self.runErr = self.lex.Run(func(lex *Lexer) {
+		self.runErr = Try(self.lex, func(lex *Lexer) {
 
 			var expect string
 			if u.Expect == "" {
 				expect = u.Input
 			}
 
-			if lex.Expect(u.Matcher).String() != expect {
+			if Expect(lex, u.Matcher).String() != expect {
 				t.FailNow()
 			}
 		})
@@ -68,26 +68,33 @@ func (self *TestLexer) ExpectError(t *testing.T, str string) {
 	}
 }
 
+func (self *TestLexer) ContainError(t *testing.T, str string) {
+
+	if self.runErr == nil || !strings.Contains(self.runErr.Error(), str) {
+		t.FailNow()
+	}
+}
+
 func TestNumeral(t *testing.T) {
 
-	new(TestLexer).Run("1 3.14 -2.5", func(lex *Lexer) {
-		if lex.Expect(Numeral()).String() != "1" {
+	new(TestLexer).Try("1 3.14 -2.5", func(lex *Lexer) {
+		if Expect(lex, Numeral()).String() != "1" {
 			t.FailNow()
 		}
 
-		if lex.Expect(WhiteSpace()).String() != " " {
+		if Expect(lex, WhiteSpace()).String() != " " {
 			t.FailNow()
 		}
 
-		if lex.Expect(Numeral()).String() != "3.14" {
+		if Expect(lex, Numeral()).String() != "3.14" {
 			t.FailNow()
 		}
 
-		if lex.Expect(WhiteSpace()).String() != " " {
+		if Expect(lex, WhiteSpace()).String() != " " {
 			t.FailNow()
 		}
 
-		if lex.Expect(Numeral()).String() != "-2.5" {
+		if Expect(lex, Numeral()).String() != "-2.5" {
 			t.FailNow()
 		}
 	}).MustNoError(t)
@@ -97,21 +104,21 @@ func TestNumeral(t *testing.T) {
 // 回车处理
 func TestLineEnd(t *testing.T) {
 
-	new(TestLexer).Run("\n1\r2\r\n", func(lex *Lexer) {
+	new(TestLexer).Try("\n1\r2\r\n", func(lex *Lexer) {
 
-		lex.Expect(LineEnd())
+		Expect(lex, LineEnd())
 
-		if lex.Expect(Numeral()).String() != "1" {
+		if Expect(lex, Numeral()).String() != "1" {
 			t.FailNow()
 		}
 
-		lex.Expect(LineEnd())
+		Expect(lex, LineEnd())
 
-		if lex.Expect(Numeral()).String() != "2" {
+		if Expect(lex, Numeral()).String() != "2" {
 			t.FailNow()
 		}
 
-		lex.Expect(LineEnd())
+		Expect(lex, LineEnd())
 
 	}).MustNoError(t).MustEOF(t)
 
@@ -119,37 +126,37 @@ func TestLineEnd(t *testing.T) {
 
 // 标识符识别
 func TestExpectIdentifier(t *testing.T) {
-	new(TestLexer).Run("b1 full _c", func(lex *Lexer) {
-		if lex.Expect(Identifier()).String() != "b1" {
+	new(TestLexer).Try("b1 full _c", func(lex *Lexer) {
+		if Expect(lex, Identifier()).String() != "b1" {
 			t.FailNow()
 		}
-		lex.Expect(WhiteSpace())
-		if lex.Expect(Identifier()).String() != "full" {
+		Expect(lex, WhiteSpace())
+		if Expect(lex, Identifier()).String() != "full" {
 			t.FailNow()
 		}
-		lex.Expect(WhiteSpace())
-		lex.Expect(Identifier())
+		Expect(lex, WhiteSpace())
+		Expect(lex, Identifier())
 	}).MustNoError(t)
 
-	new(TestLexer).Run("a 1c", func(lex *Lexer) {
-		if lex.Expect(Identifier()).String() != "a" {
+	new(TestLexer).Try("a 1c", func(lex *Lexer) {
+		if Expect(lex, Identifier()).String() != "a" {
 			t.FailNow()
 		}
-		lex.Expect(WhiteSpace())
-		lex.Expect(Identifier()) // 触发错误
-	}).ExpectError(t, "Expect Identifier")
+		Expect(lex, WhiteSpace())
+		Expect(lex, Identifier()) // 触发错误
+	}).ContainError(t, "Expect Identifier")
 
 }
 
 // C行注释
 func TestCLineComment(t *testing.T) {
 
-	new(TestLexer).Run(`// abc
+	new(TestLexer).Try(`// abc
 123`, func(lex *Lexer) {
 
-		lex.Expect(CLineComment())
-		lex.Expect(LineEnd())
-		lex.Expect(Numeral())
+		Expect(lex, CLineComment())
+		Expect(lex, LineEnd())
+		Expect(lex, Numeral())
 
 	}).MustNoError(t).MustEOF(t)
 }
@@ -157,37 +164,37 @@ func TestCLineComment(t *testing.T) {
 // Unix行注释
 func TestUnixLineComment(t *testing.T) {
 
-	new(TestLexer).Run(`# abc
+	new(TestLexer).Try(`# abc
 123`, func(lex *Lexer) {
 
-		lex.Expect(UnixLineComment())
-		lex.Expect(LineEnd())
-		lex.Expect(Numeral())
+		Expect(lex, UnixLineComment())
+		Expect(lex, LineEnd())
+		Expect(lex, Numeral())
 
 	}).MustNoError(t).MustEOF(t)
 }
 
 func TestSvcID(t *testing.T) {
 
-	new(TestLexer).Run("game#1@dev", func(lex *Lexer) {
-		svcName := lex.Expect(Identifier()).String()
+	new(TestLexer).Try("game#1@dev", func(lex *Lexer) {
+		svcName := Expect(lex, Identifier()).String()
 		if svcName != "game" {
 			t.FailNow()
 		}
 
 		// 跳过#
-		lex.Expect(Contain('#'))
+		Expect(lex, Contain('#'))
 
-		svcIndex := lex.Expect(Numeral()).Int32()
+		svcIndex := Expect(lex, Numeral()).Int32()
 
 		if svcIndex != 1 {
 			t.FailNow()
 		}
 
 		// 跳过@
-		lex.Expect(Contain('@'))
+		Expect(lex, Contain('@'))
 
-		group := lex.Expect(Identifier()).String()
+		group := Expect(lex, Identifier()).String()
 
 		if group != "dev" {
 			t.FailNow()
@@ -197,22 +204,36 @@ func TestSvcID(t *testing.T) {
 
 func TestString(t *testing.T) {
 
-	new(TestLexer).Run(`a "hello" 'world'`, func(lex *Lexer) {
-		if lex.Expect(Identifier()).String() != "a" {
+	new(TestLexer).Try(`a "hello" 'world'`, func(lex *Lexer) {
+		if Expect(lex, Identifier()).String() != "a" {
 			t.FailNow()
 		}
 
-		lex.Expect(WhiteSpace())
+		Expect(lex, WhiteSpace())
 
-		if lex.Expect(String()).String() != "hello" {
+		if Expect(lex, String()).String() != "hello" {
 			t.FailNow()
 		}
 
-		lex.Expect(WhiteSpace())
+		Expect(lex, WhiteSpace())
 
-		if lex.Expect(String()).String() != "world" {
+		if Expect(lex, String()).String() != "world" {
 			t.FailNow()
 		}
+
+	}).MustNoError(t)
+
+}
+
+func TestIgnore(t *testing.T) {
+	new(TestLexer).Try(` a b '`, func(lex *Lexer) {
+
+		Ignore(lex, WhiteSpace())
+		Ignore(lex, WhiteSpace())
+		Expect(lex, Contain('a'))
+		Ignore(lex, WhiteSpace())
+		Expect(lex, Contain('b'))
+		Ignore(lex, WhiteSpace())
 
 	}).MustNoError(t)
 

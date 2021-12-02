@@ -50,7 +50,7 @@ ExitFor:
 // 包含字面量
 func Contain(literal interface{}) Matcher {
 
-	self := &literalMatcher{}
+	self := &containMatcher{}
 
 	switch v := literal.(type) {
 	case string:
@@ -64,15 +64,15 @@ func Contain(literal interface{}) Matcher {
 	return self
 }
 
-type literalMatcher struct {
+type containMatcher struct {
 	literal []rune
 }
 
-func (*literalMatcher) TokenType() string {
-	return "Literal"
+func (*containMatcher) TokenType() string {
+	return "Contain"
 }
 
-func (self *literalMatcher) Read(lex *Lexer) (tk *Token) {
+func (self *containMatcher) Read(lex *Lexer) (tk *Token) {
 
 	var count int
 	for {

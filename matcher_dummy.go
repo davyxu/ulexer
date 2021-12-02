@@ -71,3 +71,21 @@ func (self *lineEndMatcher) Read(lex *Lexer) (tk *Token) {
 
 	return
 }
+
+// 流结束, TokenString: EOF
+func FileEnd() Matcher {
+	return (*fileEndMatcher)(nil)
+}
+
+type fileEndMatcher int
+
+func (*fileEndMatcher) TokenType() string {
+	return "FilEnd"
+}
+
+func (self *fileEndMatcher) Read(lex *Lexer) (tk *Token) {
+	if lex.EOF() {
+		return lex.NewTokenLiteral(0, self, "EOF")
+	}
+	return EmptyToken
+}

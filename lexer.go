@@ -3,16 +3,17 @@ package ulexer
 import (
 	"errors"
 	"fmt"
-	"runtime"
-	"strings"
 )
 
-type Lexer struct {
-	src  []rune
+type State struct {
 	pos  int
 	line int
 	col  int
+}
 
+type Lexer struct {
+	src []rune
+	State
 	preHooker Hooker
 }
 
@@ -101,63 +102,7 @@ func (self *Lexer) NewTokenLiteral(count int, m Matcher, literal string) (ret *T
 	return
 }
 
-func (self *Lexer) Select(mlist ...Matcher) *Token {
-
-	for _, m := range mlist {
-
-		tk := self.Read(m)
-
-		if tk != EmptyToken {
-			return tk
-		}
-	}
-
-	return EmptyToken
-}
-
-type MatchAction func(tk *Token)
-
-func (self *Lexer) SelectAction(mlist []Matcher, alist []MatchAction) {
-
-	if len(mlist) != len(alist) {
-		panic("Matcher list should equal to Action list length")
-	}
-
-	var hit bool
-	for index, m := range mlist {
-		tk := self.Read(m)
-
-		if tk != EmptyToken {
-
-			action := alist[index]
-			if action != nil {
-				action(tk)
-			}
-			hit = true
-			break
-		}
-	}
-
-	if !hit {
-
-		var sb strings.Builder
-
-		for index, m := range mlist {
-			if index > 0 {
-				sb.WriteString(" ")
-			}
-			sb.WriteString(m.TokenType())
-		}
-
-		self.Error("Expect %s", sb.String())
-	}
-
-}
-
 func (self *Lexer) Read(m Matcher) *Token {
-	if self.EOF() {
-		panic(ErrEOF)
-	}
 
 	if self.preHooker != nil {
 
@@ -168,10 +113,6 @@ func (self *Lexer) Read(m Matcher) *Token {
 		tk := h(self)
 
 		self.preHooker = h
-
-		if self.EOF() {
-			panic(ErrEOF)
-		}
 
 		if tk != nil {
 			return tk
@@ -187,49 +128,14 @@ func (self *Lexer) SetPreHook(hook Hooker) {
 	self.preHooker = hook
 }
 
-func (self *Lexer) Expect(m Matcher) *Token {
-
-	tk := self.Read(m)
-
-	if tk == EmptyToken {
-
-		self.Error("Expect %s, got: %s(offset %d)", m.TokenType(), self.ToLiteral(100), self.Pos())
-	}
-
-	return tk
-}
-
-func (self *Lexer) Run(callback func(lex *Lexer)) (retErr error) {
-
-	defer func() {
-
-		switch raw := recover().(type) {
-		case runtime.Error:
-			panic(raw)
-		case nil:
-		case error:
-			if raw != ErrEOF {
-				retErr = raw
-			}
-
-		default:
-			panic(raw)
-		}
-
-	}()
-
-	callback(self)
-
-	return
-}
-
 func NewLexer(s string) *Lexer {
 
 	self := &Lexer{
-		src:  []rune(s),
-		line: 1,
-		col:  1,
+		src: []rune(s),
 	}
+
+	self.State.line = 1
+	self.State.col = 1
 
 	return self
 }

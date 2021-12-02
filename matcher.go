@@ -18,7 +18,7 @@ func (*boolMatcher) TokenType() string {
 
 func (self *boolMatcher) Read(lex *Lexer) (tk *Token) {
 
-	tk = lex.Select(Contain("true"), Contain("false"))
+	tk = Select(lex, Contain("true"), Contain("false"))
 
 	if tk != EmptyToken {
 		tk.t = self.TokenType()
