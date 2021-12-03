@@ -1,6 +1,7 @@
 package ulexer
 
 import (
+	"fmt"
 	"runtime"
 )
 
@@ -9,7 +10,15 @@ func Expect(lex *Lexer, m Matcher) *Token {
 	tk := lex.Read(m)
 
 	if tk == EmptyToken {
-		lex.Error("Expect %s, got: %s(offset %d)", m.TokenType(), lex.ToLiteral(100), lex.Pos())
+
+		var target string
+		if s, ok := m.(fmt.Stringer); ok {
+			target = s.String()
+		} else {
+			target = m.TokenType()
+		}
+
+		lex.Error("expect '%s'", target)
 	}
 
 	return tk

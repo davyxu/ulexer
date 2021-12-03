@@ -72,6 +72,10 @@ func (*containMatcher) TokenType() string {
 	return "Contain"
 }
 
+func (c *containMatcher) String() string {
+	return string(c.literal)
+}
+
 func (self *containMatcher) Read(lex *Lexer) (tk *Token) {
 
 	var count int
