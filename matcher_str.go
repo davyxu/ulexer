@@ -122,10 +122,15 @@ func (self *stringMatcher) Read(lex *Lexer) (tk *Token) {
 		return EmptyToken
 	}
 
+	state := lex.State
+
 	lex.Consume(1)
 
-	var escaping bool
-	var sb strings.Builder
+	var (
+		escaping bool
+		close    bool
+		sb       strings.Builder
+	)
 
 	var count int
 	for {
@@ -148,10 +153,11 @@ func (self *stringMatcher) Read(lex *Lexer) (tk *Token) {
 		} else if c != beginChar {
 			if c == '\\' {
 				escaping = true
-			} else {
+			} else if c != 0 {
 				sb.WriteRune(c)
 			}
 		} else {
+			close = true
 			break
 		}
 
@@ -162,7 +168,8 @@ func (self *stringMatcher) Read(lex *Lexer) (tk *Token) {
 		count++
 	}
 
-	if count == 0 {
+	if !close {
+		lex.State = state
 		return EmptyToken
 	}
 

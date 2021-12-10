@@ -236,5 +236,13 @@ func TestIgnore(t *testing.T) {
 		Ignore(lex, WhiteSpace())
 
 	}).MustNoError(t)
+}
 
+func TestEmptyString(t *testing.T) {
+	new(TestLexer).Try(`''"`, func(lex *Lexer) {
+
+		Expect(lex, String())
+		Expect(lex, String()) // 未结束的字符串
+
+	}).ContainError(t, "expect 'String'")
 }
