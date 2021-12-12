@@ -246,3 +246,26 @@ func TestEmptyString(t *testing.T) {
 
 	}).ContainError(t, "expect 'String'")
 }
+
+func expectTokenHex(t *testing.T, tk *Token, expectValue uint32) {
+	v := tk.Numeral(32, 16, false)
+	hex := v.(uint32)
+	if hex != expectValue {
+		t.FailNow()
+	}
+}
+
+func TestHex(t *testing.T) {
+	new(TestLexer).Try(`0xff`, func(lex *Lexer) {
+
+		tk := Expect(lex, Hex())
+		expectTokenHex(t, tk, 0xff)
+
+	}).MustNoError(t)
+	new(TestLexer).Try(`ff1234`, func(lex *Lexer) {
+
+		tk := Expect(lex, Hex())
+		expectTokenHex(t, tk, 0xff1234)
+
+	}).MustNoError(t)
+}

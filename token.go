@@ -13,6 +13,10 @@ type Token struct {
 	line       int
 }
 
+func (self *Token) SetType(t string) {
+	self.t = t
+}
+
 func (self *Token) Pos() int {
 	return self.begin
 }
@@ -122,8 +126,8 @@ func (self *Token) Float64() float64 {
 	return v
 }
 
-// 自动转换为指定数值
-func (self *Token) Numeral(bitSize int, unsign bool) interface{} {
+// bitSize: 32/64 位, base: 10/16进制, unsign是否带符号, 自动转换为指定数值
+func (self *Token) Numeral(bitSize, base int, signed bool) interface{} {
 
 	if strings.Contains(self.lit, ".") {
 
@@ -136,21 +140,8 @@ func (self *Token) Numeral(bitSize int, unsign bool) interface{} {
 		return v
 	} else {
 
-		if unsign {
-			v, _ := strconv.ParseUint(self.lit, 10, bitSize)
-
-			switch bitSize {
-			case 16:
-				return uint16(v)
-			case 32:
-				return uint32(v)
-			case 64:
-				return v
-			default:
-				panic("unknown numeral bitsize")
-			}
-		} else {
-			v, _ := strconv.ParseInt(self.lit, 10, bitSize)
+		if signed {
+			v, _ := strconv.ParseInt(self.lit, base, bitSize)
 
 			switch bitSize {
 			case 16:
@@ -162,9 +153,27 @@ func (self *Token) Numeral(bitSize int, unsign bool) interface{} {
 			default:
 				panic("unknown numeral bitsize")
 			}
+
+		} else {
+			v, _ := strconv.ParseUint(self.lit, base, bitSize)
+
+			switch bitSize {
+			case 16:
+				return uint16(v)
+			case 32:
+				return uint32(v)
+			case 64:
+				return v
+			default:
+				panic("unknown numeral bitsize")
+			}
 		}
 	}
 
+}
+
+func MakeRawToken(t, literal string) *Token {
+	return &Token{t: t, lit: literal}
 }
 
 var (

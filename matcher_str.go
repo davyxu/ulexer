@@ -128,7 +128,7 @@ func (self *stringMatcher) Read(lex *Lexer) (tk *Token) {
 
 	var (
 		escaping bool
-		close    bool
+		closed   bool
 		sb       strings.Builder
 	)
 
@@ -157,7 +157,7 @@ func (self *stringMatcher) Read(lex *Lexer) (tk *Token) {
 				sb.WriteRune(c)
 			}
 		} else {
-			close = true
+			closed = true
 			break
 		}
 
@@ -168,7 +168,7 @@ func (self *stringMatcher) Read(lex *Lexer) (tk *Token) {
 		count++
 	}
 
-	if !close {
+	if !closed {
 		lex.State = state
 		return EmptyToken
 	}

@@ -1,13 +1,16 @@
 package ulexer
 
-import "unicode"
+import (
+	"strings"
+	"unicode"
+)
 
 // 数字, 无符号整形
 func UInteger() Matcher {
 	return (*uIntegerMatcher)(nil)
 }
 
-type uIntegerMatcher int
+type uIntegerMatcher struct{}
 
 func (*uIntegerMatcher) TokenType() string {
 	return "UInteger"
@@ -46,7 +49,7 @@ func Integer() Matcher {
 	return (*integerMatcher)(nil)
 }
 
-type integerMatcher int
+type integerMatcher struct{}
 
 func (*integerMatcher) TokenType() string {
 	return "Integer"
@@ -88,7 +91,7 @@ func Numeral() Matcher {
 	return (*numeralMatcher)(nil)
 }
 
-type numeralMatcher int
+type numeralMatcher struct{}
 
 func (*numeralMatcher) TokenType() string {
 	return "Numeral"
@@ -126,6 +129,66 @@ ExitFor:
 	}
 
 	tk = lex.NewToken(count, self)
+
+	lex.Consume(count)
+
+	return
+}
+
+// 匹配十六进制, 带0x前缀的, 自动去掉, 使用Token.Numeral(32, 16, false)获取数值
+func Hex() Matcher {
+	return (*hexMatcher)(nil)
+}
+
+type hexMatcher struct{}
+
+func (*hexMatcher) TokenType() string {
+	return "Hex"
+}
+
+func isHexNumber(c rune) bool {
+	if unicode.IsNumber(c) {
+		return true
+	}
+	switch c {
+	case 'a', 'b', 'c', 'd', 'e', 'f':
+		return true
+	}
+
+	return false
+}
+
+func (self *hexMatcher) Read(lex *Lexer) (tk *Token) {
+
+	var count int
+
+	for {
+		c := lex.Peek(count)
+
+		switch {
+		case isHexNumber(c):
+		case c == 'x' && count == 1:
+		default:
+			goto ExitFor
+		}
+
+		count++
+	}
+
+ExitFor:
+
+	if count == 0 {
+		return EmptyToken
+	}
+
+	str := lex.ToLiteral(count)
+
+	// 纯十六进制parse时, 在输出字符前加0x, 方便直接转换为16进制
+	if strings.HasPrefix(str, "0x") {
+		str = str[2:]
+	}
+
+	tk = lex.NewTokenLiteral(count, self, str)
 
 	lex.Consume(count)
 
