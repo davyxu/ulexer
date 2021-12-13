@@ -9,12 +9,12 @@ func (*cLineCommentMatcher) TokenType() string {
 	return "CLineComment"
 }
 
-type cLineCommentMatcher int
+type cLineCommentMatcher struct{}
 
 func (self *cLineCommentMatcher) Read(lex *Lexer) (tk *Token) {
 
 	if lex.Peek(0) != '/' || lex.Peek(1) != '/' {
-		return EmptyToken
+		return nil
 	}
 
 	lex.Consume(2)
@@ -31,7 +31,7 @@ func (self *cLineCommentMatcher) Read(lex *Lexer) (tk *Token) {
 	}
 
 	if count == 0 {
-		return EmptyToken
+		return nil
 	}
 
 	tk = lex.NewToken(count, self)
@@ -50,12 +50,12 @@ func (*unixLineCommentMatcher) TokenType() string {
 	return "UnixLineComment"
 }
 
-type unixLineCommentMatcher int
+type unixLineCommentMatcher struct{}
 
 func (self *unixLineCommentMatcher) Read(lex *Lexer) (tk *Token) {
 
 	if lex.Peek(0) != '#' {
-		return EmptyToken
+		return nil
 	}
 
 	lex.Consume(2)
@@ -72,7 +72,7 @@ func (self *unixLineCommentMatcher) Read(lex *Lexer) (tk *Token) {
 	}
 
 	if count == 0 {
-		return EmptyToken
+		return nil
 	}
 
 	tk = lex.NewToken(count, self)

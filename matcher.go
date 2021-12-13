@@ -10,7 +10,7 @@ func Bool() Matcher {
 	return (*boolMatcher)(nil)
 }
 
-type boolMatcher int
+type boolMatcher struct{}
 
 func (*boolMatcher) TokenType() string {
 	return "Bool"
@@ -20,7 +20,7 @@ func (self *boolMatcher) Read(lex *Lexer) (tk *Token) {
 
 	tk = Select(lex, Contain("true"), Contain("false"))
 
-	if tk != EmptyToken {
+	if tk != nil {
 		tk.t = self.TokenType()
 	}
 

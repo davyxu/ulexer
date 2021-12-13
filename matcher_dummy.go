@@ -7,7 +7,7 @@ func WhiteSpace() Matcher {
 	return (*whiteSpaceMatcher)(nil)
 }
 
-type whiteSpaceMatcher int
+type whiteSpaceMatcher struct{}
 
 func (*whiteSpaceMatcher) TokenType() string {
 	return "WhiteSpace"
@@ -27,7 +27,7 @@ func (self *whiteSpaceMatcher) Read(lex *Lexer) (tk *Token) {
 	}
 
 	if count == 0 {
-		return EmptyToken
+		return nil
 	}
 
 	tk = lex.NewToken(count, self)
@@ -42,7 +42,7 @@ func LineEnd() Matcher {
 	return (*lineEndMatcher)(nil)
 }
 
-type lineEndMatcher int
+type lineEndMatcher struct{}
 
 func (*lineEndMatcher) TokenType() string {
 	return "LineEnd"
@@ -62,7 +62,7 @@ func (self *lineEndMatcher) Read(lex *Lexer) (tk *Token) {
 	}
 
 	if count == 0 {
-		return EmptyToken
+		return nil
 	}
 
 	tk = lex.NewToken(count, self)
@@ -77,7 +77,7 @@ func FileEnd() Matcher {
 	return (*fileEndMatcher)(nil)
 }
 
-type fileEndMatcher int
+type fileEndMatcher struct{}
 
 func (*fileEndMatcher) TokenType() string {
 	return "FilEnd"
@@ -87,5 +87,5 @@ func (self *fileEndMatcher) Read(lex *Lexer) (tk *Token) {
 	if lex.EOF() {
 		return lex.NewTokenLiteral(0, self, "EOF")
 	}
-	return EmptyToken
+	return nil
 }

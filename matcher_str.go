@@ -10,7 +10,7 @@ func Identifier() Matcher {
 	return (*identifierMatcher)(nil)
 }
 
-type identifierMatcher int
+type identifierMatcher struct{}
 
 func (*identifierMatcher) TokenType() string {
 	return "Identifier"
@@ -37,7 +37,7 @@ func (self *identifierMatcher) Read(lex *Lexer) (tk *Token) {
 ExitFor:
 
 	if count == 0 {
-		return EmptyToken
+		return nil
 	}
 
 	tk = lex.NewToken(count, self)
@@ -94,7 +94,7 @@ func (self *containMatcher) Read(lex *Lexer) (tk *Token) {
 	}
 
 	if count == 0 {
-		return EmptyToken
+		return nil
 	}
 
 	tk = lex.NewToken(count, self)
@@ -109,7 +109,7 @@ func String() Matcher {
 	return (*stringMatcher)(nil)
 }
 
-type stringMatcher int
+type stringMatcher struct{}
 
 func (*stringMatcher) TokenType() string {
 	return "String"
@@ -119,7 +119,7 @@ func (self *stringMatcher) Read(lex *Lexer) (tk *Token) {
 
 	beginChar := lex.Peek(0)
 	if beginChar != '"' && beginChar != '\'' {
-		return EmptyToken
+		return nil
 	}
 
 	state := lex.State
@@ -170,7 +170,7 @@ func (self *stringMatcher) Read(lex *Lexer) (tk *Token) {
 
 	if !closed {
 		lex.State = state
-		return EmptyToken
+		return nil
 	}
 
 	end := count + 1

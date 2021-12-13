@@ -34,7 +34,7 @@ func (self *uIntegerMatcher) Read(lex *Lexer) (tk *Token) {
 ExitFor:
 
 	if count == 0 {
-		return EmptyToken
+		return nil
 	}
 
 	tk = lex.NewToken(count, self)
@@ -75,7 +75,7 @@ func (self *integerMatcher) Read(lex *Lexer) (tk *Token) {
 ExitFor:
 
 	if count == 0 {
-		return EmptyToken
+		return nil
 	}
 
 	tk = lex.NewToken(count, self)
@@ -125,7 +125,7 @@ func (self *numeralMatcher) Read(lex *Lexer) (tk *Token) {
 ExitFor:
 
 	if count == 0 {
-		return EmptyToken
+		return nil
 	}
 
 	tk = lex.NewToken(count, self)
@@ -178,7 +178,7 @@ func (self *hexMatcher) Read(lex *Lexer) (tk *Token) {
 ExitFor:
 
 	if count == 0 {
-		return EmptyToken
+		return nil
 	}
 
 	str := lex.ToLiteral(count)

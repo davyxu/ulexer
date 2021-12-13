@@ -175,7 +175,3 @@ func (self *Token) Numeral(bitSize, base int, signed bool) interface{} {
 func MakeRawToken(t, literal string) *Token {
 	return &Token{t: t, lit: literal}
 }
-
-var (
-	EmptyToken = &Token{}
-)

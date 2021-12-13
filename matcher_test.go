@@ -144,7 +144,7 @@ func TestExpectIdentifier(t *testing.T) {
 		}
 		Expect(lex, WhiteSpace())
 		Expect(lex, Identifier()) // 触发错误
-	}).ContainError(t, "Expect Identifier")
+	}).ContainError(t, "expect 'Identifier'")
 
 }
 

@@ -9,7 +9,7 @@ func Expect(lex *Lexer, m Matcher) *Token {
 
 	tk := lex.Read(m)
 
-	if tk == EmptyToken {
+	if tk == nil {
 
 		var target string
 		if s, ok := m.(fmt.Stringer); ok {
@@ -28,7 +28,7 @@ func Ignore(lex *Lexer, m Matcher) {
 	state := lex.State
 	tk := lex.Read(m)
 
-	if tk == EmptyToken {
+	if tk == nil {
 		lex.State = state
 	}
 }
@@ -36,7 +36,7 @@ func Ignore(lex *Lexer, m Matcher) {
 func Is(lex *Lexer, m Matcher, refToken **Token) bool {
 
 	tk := lex.Read(m)
-	if tk != EmptyToken {
+	if tk != nil {
 		*refToken = tk
 		return true
 	}
@@ -74,10 +74,10 @@ func Select(lex *Lexer, mlist ...Matcher) *Token {
 
 		tk := lex.Read(m)
 
-		if tk != EmptyToken {
+		if tk != nil {
 			return tk
 		}
 	}
 
-	return EmptyToken
+	return nil
 }
