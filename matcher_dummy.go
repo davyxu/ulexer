@@ -85,7 +85,7 @@ func (*fileEndMatcher) TokenType() string {
 
 func (self *fileEndMatcher) Read(lex *Lexer) (tk *Token) {
 	if lex.EOF() {
-		return lex.NewTokenLiteral(0, self, "EOF")
+		return lex.NewTokenLiteral(0, self, "@EOF")
 	}
 	return nil
 }

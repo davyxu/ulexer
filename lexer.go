@@ -124,8 +124,10 @@ func (self *Lexer) Read(m Matcher) *Token {
 
 type Hooker func(lex *Lexer) *Token
 
-func (self *Lexer) SetPreHook(hook Hooker) {
+func (self *Lexer) SetPreHook(hook Hooker) (pre Hooker) {
+	pre = self.preHooker
 	self.preHooker = hook
+	return
 }
 
 func NewLexer(s string) *Lexer {

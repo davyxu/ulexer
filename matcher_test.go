@@ -174,6 +174,19 @@ func TestUnixLineComment(t *testing.T) {
 	}).MustNoError(t).MustEOF(t)
 }
 
+// C块注释
+func TestCBlockComment(t *testing.T) {
+
+	new(TestLexer).Try(`/*** abc
+***/123`, func(lex *Lexer) {
+
+		Expect(lex, CBlockComment())
+
+		Expect(lex, Numeral())
+
+	}).MustNoError(t).MustEOF(t)
+}
+
 func TestSvcID(t *testing.T) {
 
 	new(TestLexer).Try("game#1@dev", func(lex *Lexer) {
