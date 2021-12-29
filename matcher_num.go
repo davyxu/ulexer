@@ -153,6 +153,8 @@ func isHexNumber(c rune) bool {
 	switch c {
 	case 'a', 'b', 'c', 'd', 'e', 'f':
 		return true
+	case 'A', 'B', 'C', 'D', 'E', 'F':
+		return true
 	}
 
 	return false
