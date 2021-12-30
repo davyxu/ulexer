@@ -1,8 +1,10 @@
 package ulexer
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 type State struct {
@@ -15,6 +17,10 @@ type Lexer struct {
 	src []rune
 	State
 	preHooker Hooker
+}
+
+func (self *Lexer) String() string {
+	return fmt.Sprintf("%d,%d", self.line, self.col)
 }
 
 func (self *Lexer) Pos() int {
@@ -140,4 +146,24 @@ func NewLexer(s string) *Lexer {
 	self.State.col = 1
 
 	return self
+}
+
+func (self *Lexer) Code() string {
+
+	reader := bufio.NewReader(strings.NewReader(string(self.src)))
+
+	var sb strings.Builder
+	line := 0
+	for {
+		lineStr, err := reader.ReadString('\n')
+		if err != nil {
+			break
+		}
+
+		line++
+
+		sb.WriteString(fmt.Sprintf("%d:	%s", line, lineStr))
+	}
+
+	return sb.String()
 }
