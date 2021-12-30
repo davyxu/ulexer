@@ -28,7 +28,7 @@ func Ignore(lex *Lexer, m Matcher) {
 	state := lex.State
 	tk := lex.Read(m)
 
-	if tk == nil {
+	if tk == nil && !lex.EOF() {
 		lex.State = state
 	}
 }
