@@ -16,6 +16,7 @@ type State struct {
 type Lexer struct {
 	src []rune
 	State
+	SrcName   string
 	preHooker Hooker
 }
 
@@ -37,6 +38,10 @@ func (self *Lexer) Line() int {
 
 func (self *Lexer) Col() int {
 	return self.col
+}
+
+func (self *Lexer) SourcePos() string {
+	return fmt.Sprintf("%s:%d", self.SrcName, self.line)
 }
 
 func (self *Lexer) Peek(offset int) rune {
