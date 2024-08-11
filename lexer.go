@@ -62,11 +62,13 @@ func (self *Lexer) Consume(n int) {
 			self.line++
 		case '\r':
 			self.col = 1
+		default:
+			self.col += n
 		}
 	}
 
 	self.pos += n
-	self.col += n
+
 }
 
 func (self *Lexer) EOF() bool {
